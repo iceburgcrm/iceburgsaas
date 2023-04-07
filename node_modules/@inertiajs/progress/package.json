@@ -1,0 +1,31 @@
+{
+  "name": "@inertiajs/progress",
+  "version": "0.2.7",
+  "license": "MIT",
+  "description": "This package adds an NProgress page loading indicator to your Inertia.js app.",
+  "contributors": [
+    "Jonathan Reinink <jonathan@reinink.ca>"
+  ],
+  "source": "src/index.js",
+  "main": "dist/index.js",
+  "unpkg": "dist/index.umd.js",
+  "types": "types.d.ts",
+  "scripts": {
+    "build": "npm run clean && npm run build:cjs && npm run build:umd",
+    "build:cjs": "microbundle --format cjs",
+    "build:umd": "microbundle --format umd --name Inertia --external none",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build",
+    "watch": "microbundle watch --format cjs"
+  },
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "microbundle": "^0.12.0"
+  },
+  "dependencies": {
+    "nprogress": "^0.2.0"
+  },
+  "peerDependencies": {
+    "@inertiajs/inertia": "^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0"
+  }
+}

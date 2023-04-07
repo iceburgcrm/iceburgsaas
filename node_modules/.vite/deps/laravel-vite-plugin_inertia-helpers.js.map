@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../laravel-vite-plugin/inertia-helpers/index.js"],
+  "sourcesContent": ["export async function resolvePageComponent(path, pages) {\n    const page = pages[path];\n    if (typeof page === 'undefined') {\n        throw new Error(`Page not found: ${path}`);\n    }\n    return typeof page === 'function' ? page() : page;\n}\n"],
+  "mappings": ";;;AAAA,eAAsB,qBAAqB,MAAM,OAAO;AACpD,QAAM,OAAO,MAAM;AACnB,MAAI,OAAO,SAAS,aAAa;AAC7B,UAAM,IAAI,MAAM,mBAAmB,MAAM;AAAA,EAC7C;AACA,SAAO,OAAO,SAAS,aAAa,KAAK,IAAI;AACjD;",
+  "names": []
+}
