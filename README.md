@@ -31,35 +31,3 @@ Installation
 6.  Run `php artisan migrate` to run the database migrations.
 7.  Run `npm run dev` to compile the assets.
 8.  Serve the application with `php artisan serve` or use a web server like Apache or Nginx.
-
-Set these parameters
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=crmbuilder
-DB_USERNAME=root
-DB_PASSWORD=
-
-DB_T_CONNECTION=tenant22
-DB_HOST2=127.0.0.2
-DB_PORT2=3306
-DB_ICEBURG_DATABASE=iceburg2
-DB_USERNAME2=root
-DB_PASSWORD2=
-
-STRIPE_KEY=
-STRIPE_SECRET=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_KEY_STAGING=
-STRIPE_SECRET_STAGING=
-STRIPE_WEBHOOK_SECRET_STAGING=
-
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-TWITTER_CLIENT_ID=
-TWITTER_CLIENT_SECRET=
