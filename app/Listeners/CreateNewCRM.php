@@ -3,8 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\NewCrm;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class CreateNewCRM
 {
@@ -21,12 +19,11 @@ class CreateNewCRM
     /**
      * Handle the event.
      *
-     * @param  \App\Events\NewCrm  $event
      * @return void
      */
     public function handle(NewCrm $event)
     {
-        $crm=new CrmCreator();
-        $status=$crm->create($event->data);
+        $crm = new CrmCreator();
+        $status = $crm->create($event->data);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Crm\CrmCreator;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -13,7 +12,9 @@ use Illuminate\Queue\SerializesModels;
 class GenerateCrm implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     public $crm;
+
     /**
      * Create a new job instance.
      *
@@ -21,8 +22,8 @@ class GenerateCrm implements ShouldQueue
      */
     public function __construct(CrmCreator $crm, $user)
     {
-        $this->crm=$crm;
-        $this->user=$user;
+        $this->crm = $crm;
+        $this->user = $user;
     }
 
     /**

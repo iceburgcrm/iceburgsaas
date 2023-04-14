@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Crm;
-use Illuminate\Console\Command;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class DeleteExpiredFreeDatabases extends Command
@@ -32,22 +32,21 @@ class DeleteExpiredFreeDatabases extends Command
     {
         date_default_timezone_set('America/New_York');
        // $date = \Carbon\Carbon::today('UTC')->subDays(0);
-        $date=date('Y-m-d H:i:s', strtotime('7 Day'));
-        $users=User::all();
-        foreach($users as $user)
-        {
-            if(!$user->is_subscribed())
-            {
+        $date = date('Y-m-d H:i:s', strtotime('7 Day'));
+        $users = User::all();
+        foreach ($users as $user) {
+            if (! $user->is_subscribed()) {
 
                 Crm::where('user_id', $user->id)
-                    ->where('created_at','<=',$date)->each(function ($db) {
-                    DB::statement("DROP DATABASE " . $db->name);
+                    ->where('created_at', '<=', $date)->each(function ($db) {
+                    DB::statement('DROP DATABASE '.$db->name);
                 });
                 Crm::where('user_id', $user->id)
-                    ->where('created_at','<=',$date)
+                    ->where('created_at', '<=', $date)
                     ->delete();
             }
         }
+
         return Command::SUCCESS;
     }
 }

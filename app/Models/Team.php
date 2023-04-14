@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Laravel\Cashier\Billable;
 use Laravel\Jetstream\Events\TeamCreated;
 use Laravel\Jetstream\Events\TeamDeleted;
 use Laravel\Jetstream\Events\TeamUpdated;
@@ -22,8 +21,6 @@ class Team extends JetstreamTeam
         'personal_team' => 'boolean',
     ];
 
-
-
     /**
      * The attributes that are mass assignable.
      *
@@ -31,7 +28,7 @@ class Team extends JetstreamTeam
      */
     protected $fillable = [
         'name',
-        'personal_team'
+        'personal_team',
     ];
 
     /**

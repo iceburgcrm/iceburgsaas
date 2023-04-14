@@ -2,18 +2,17 @@
 
 namespace App\Models\Iceburg;
 
+use App\Models\Field;
 use Carbon\Carbon;
+use DB;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Search;
-use App\Models\Field;
-use Auth;
-use DB;
 
 class Datalet extends Model
 {
     use HasFactory;
-    public $table="ice_datalets";
+
+    public $table = 'ice_datalets';
 
     public function type()
     {
@@ -35,22 +34,20 @@ class Datalet extends Model
         return $this->hasOne(Relationship::class, 'id', 'relationship_id');
     }
 
-    public static function getData($id=0)
+    public static function getData($id = 0)
     {
-        $returnData=[];
-        if(intval($id) > 0)
-        {
-            $datalet=Datalet::where('id', $id)->first();
-            switch($datalet->id)
-            {
+        $returnData = [];
+        if (intval($id) > 0) {
+            $datalet = Datalet::where('id', $id)->first();
+            switch ($datalet->id) {
                 case 1:
                     $returnData = [
                         'labels' => ['Tax', 'Discount', 'Gross', 'Net'],
                         'data' => [
-                            round(DB::table('lineitems')->sum('taxes')/10, 2),
-                            round(DB::table('lineitems')->sum('discount')/5, 2),
+                            round(DB::table('lineitems')->sum('taxes') / 10, 2),
+                            round(DB::table('lineitems')->sum('discount') / 5, 2),
                             DB::table('lineitems')->sum('gross'),
-                            round(DB::table('lineitems')->sum('gross')/2, 2),
+                            round(DB::table('lineitems')->sum('gross') / 2, 2),
                         ],
                     ];
                     break;
@@ -121,6 +118,7 @@ class Datalet extends Model
                     break;
             }
         }
+
         return $returnData;
     }
 }

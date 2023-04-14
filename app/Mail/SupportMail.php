@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
@@ -13,17 +12,20 @@ use Illuminate\Queue\SerializesModels;
 class SupportMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $message='';
-    public $subject2='';
+
+    public $message = '';
+
+    public $subject2 = '';
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($subject='', $message='')
+    public function __construct($subject = '', $message = '')
     {
-        $this->subject2=$subject;
-        $this->message=$message;
+        $this->subject2 = $subject;
+        $this->message = $message;
     }
 
     /**
@@ -50,7 +52,7 @@ class SupportMail extends Mailable
             markdown: 'emails.support',
             with: [
                 'subject' => $this->subject2,
-                'message' => $this->message
+                'message' => $this->message,
             ]
         );
     }

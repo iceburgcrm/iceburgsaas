@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\CrmPlan;
+use App\Models\CrmStatus;
 use App\Models\CrmTheme;
 use App\Models\CrmType;
-use App\Models\CrmStatus;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -59,8 +59,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'ontop',
-                'description' => 'Connect your MySQL database and we\'ll install IceburgCRM in your database schema which will allow you to use the CRM to manage data.  Write permissions need to be enabled for the user connecting.'
-            ]
+                'description' => 'Connect your MySQL database and we\'ll install IceburgCRM in your database schema which will allow you to use the CRM to manage data.  Write permissions need to be enabled for the user connecting.',
+            ],
         ]);
 
         CrmStatus::insert([
@@ -75,39 +75,39 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Deleted',
-            ]
+            ],
         ]);
 
         CrmTheme::insert([
-                ['name' => "light"],
-                ['name' => "dark"],
-                ['name' => "cupcake"],
-                ['name' => "bumblebee"],
-                ['name' => "emerald"],
-                ['name' => "corporate"],
-                ['name' => "synthwave"],
-                ['name' => "retro"],
-                ['name' => "cyberpunk"],
-                ['name' => "valentine"],
-                ['name' => "halloween"],
-                ['name' => "garden"],
-                ['name' => "forest"],
-                ['name' => "aqua"],
-                ['name' => "lofi"],
-                ['name' => "pastel"],
-                ['name' => "fantasy"],
-                ['name' => "wireframe"],
-                ['name' => "black"],
-                ['name' => "luxury"],
-                ['name' => "dracula"],
-                ['name' => "cmyk"],
-                ['name' => "autumn"],
-                ['name' => "business"],
-                ['name' => "acid"],
-                ['name' => "lemonade"],
-                ['name' => "night"],
-                ['name' => "coffee"],
-                ['name' => "winter"],
+            ['name' => 'light'],
+            ['name' => 'dark'],
+            ['name' => 'cupcake'],
+            ['name' => 'bumblebee'],
+            ['name' => 'emerald'],
+            ['name' => 'corporate'],
+            ['name' => 'synthwave'],
+            ['name' => 'retro'],
+            ['name' => 'cyberpunk'],
+            ['name' => 'valentine'],
+            ['name' => 'halloween'],
+            ['name' => 'garden'],
+            ['name' => 'forest'],
+            ['name' => 'aqua'],
+            ['name' => 'lofi'],
+            ['name' => 'pastel'],
+            ['name' => 'fantasy'],
+            ['name' => 'wireframe'],
+            ['name' => 'black'],
+            ['name' => 'luxury'],
+            ['name' => 'dracula'],
+            ['name' => 'cmyk'],
+            ['name' => 'autumn'],
+            ['name' => 'business'],
+            ['name' => 'acid'],
+            ['name' => 'lemonade'],
+            ['name' => 'night'],
+            ['name' => 'coffee'],
+            ['name' => 'winter'],
 
         ]);
 

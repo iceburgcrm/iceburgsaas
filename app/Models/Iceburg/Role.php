@@ -9,14 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 class Role extends Model
 {
     use HasFactory;
-    public $table="ice_roles";
 
-    public function module() : Collection
+    public $table = 'ice_roles';
+
+    public function module(): Collection
     {
         return $this->belongsTo(Module::class, 'id', 'module_id');
     }
 
-    public function permissions() : Collection
+    public function permissions(): Collection
     {
         return $this->hasMany(Permission::class, 'role_id', 'id');
     }

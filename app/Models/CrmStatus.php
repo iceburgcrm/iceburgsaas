@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class CrmStatus extends Model
 {
     use HasFactory;
+
     protected $table = 'crm_status';
 }

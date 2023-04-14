@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class RelationshipModule extends Model
 {
     use HasFactory;
-    public $table="ice_relationship_modules";
+
+    public $table = 'ice_relationship_modules';
+
     protected $guarded = ['id'];
 
     public function relationship()

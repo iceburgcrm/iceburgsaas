@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class DataletType extends Model
 {
     use HasFactory;
-    public $table="ice_datalet_types";
+
+    public $table = 'ice_datalet_types';
 }

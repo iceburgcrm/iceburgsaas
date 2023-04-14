@@ -2,16 +2,14 @@
 
 namespace App\Models;
 
-use App\Models\CrmPlan;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Cashier\Billable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
-use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
@@ -29,7 +27,7 @@ class User extends Authenticatable
      * @var string[]
      */
     protected $fillable = [
-        'name', 'email', 'password', 'signup_plan', 'first_login', 'google_id', 'github_id', 'twitter_id'
+        'name', 'email', 'password', 'signup_plan', 'first_login', 'google_id', 'github_id', 'twitter_id',
     ];
 
     /**
@@ -64,39 +62,43 @@ class User extends Authenticatable
 
     public function crm_limit()
     {
-        if(auth()->user()->subscribed('default')){
+        if (auth()->user()->subscribed('default')) {
             return 10;
         }
+
         return 2;
     }
 
-    public function setPlan(){
+    public function setPlan()
+    {
 
-        $planId=1;
+        $planId = 1;
      //   dd(CrmPlan::where('id', 2)->value('stripe_id'));
       //  dd(auth()->user()->subscribed('default'));
-        if(auth()->user()->subscription() &&
+        if (auth()->user()->subscription() &&
             auth()->user()->subscription()->stripe_price == CrmPlan::where('id', 2)->value('stripe_id')
-        ){
-            $planId=2;
-        }
-        elseif(auth()->user()->subscription() &&
-            auth()->user()->subscription()->stripe_price == CrmPlan::where('id', 3)->value('stripe_id')){
-            $planId=3;
+        ) {
+            $planId = 2;
+        } elseif (auth()->user()->subscription() &&
+            auth()->user()->subscription()->stripe_price == CrmPlan::where('id', 3)->value('stripe_id')) {
+            $planId = 3;
         }
 
-        $this->plan_id=$planId;
+        $this->plan_id = $planId;
         $this->save();
     }
 
-    public function is_subscribed(){
-        if($this->subscribed('default') ){
+    public function is_subscribed()
+    {
+        if ($this->subscribed('default')) {
             return true;
         }
+
         return false;
     }
 
-    public function plan(){
-        return $this->hasOne(CrmPlan::class, "id", "plan_id");
+    public function plan()
+    {
+        return $this->hasOne(CrmPlan::class, 'id', 'plan_id');
     }
 }

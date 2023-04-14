@@ -2,7 +2,6 @@
 
 namespace App\Crm;
 
-
 use App\Models\Connection;
 use App\Models\Crm;
 use App\Models\CrmType;
@@ -17,28 +16,29 @@ use App\Models\Iceburg\Relationship;
 use App\Models\Iceburg\Setting;
 use App\Models\Iceburg\SubpanelField;
 use App\Models\Iceburg\User;
-
 use Faker\Factory;
 use iamcal\SQLParser;
 use Illuminate\Http\File;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CrmCreator
 {
+    public $data = '';
 
-    public $data='';
-    public $user_id='';
-    public $parser='';
-    public $lastError='';
+    public $user_id = '';
+
+    public $parser = '';
+
+    public $lastError = '';
 
     public $excludeFields = [
-        'id', 'slug', 'soft_delete', 'created_at', 'updated_at'
+        'id', 'slug', 'soft_delete', 'created_at', 'updated_at',
     ];
+
     public $prefix = 'ice_';
+
     public $icons = [
         'BuildingOffice2Icon',
         'BuildingOffice2Icon',
@@ -79,11 +79,10 @@ class CrmCreator
 
     public function __construct($data, $user_id, $parser)
     {
-        $this->parser=$parser;
-        $this->data=$data;
-        $this->user_id=$user_id;
+        $this->parser = $parser;
+        $this->data = $data;
+        $this->user_id = $user_id;
     }
-
 
     public function getIcon($id)
     {
@@ -92,6 +91,7 @@ class CrmCreator
         if (isset($this->icons[$id])) {
             $icon = $this->icons[$id];
         }
+
         return $icon;
     }
 
@@ -161,6 +161,7 @@ class CrmCreator
             default:
                 break;
         }
+
         return [$inputType, $dataType];
     }
 
@@ -170,12 +171,11 @@ class CrmCreator
         foreach ($fields as $field) {
             $data = [
                 'name' => $field['name'],
-                'label' => ucwords(preg_replace('/([^A-Z])([A-Z])/', "$1 $2", $field['name'])),
+                'label' => ucwords(preg_replace('/([^A-Z])([A-Z])/', '$1 $2', $field['name'])),
                 'module_id' => $moduleId,
             ];
 
             [$data['input_type'], $data['data_type']] = $this->getInputType($field);
-
 
             if ($data['input_type'] == 'decimal') {
                 $data['decimal_places'] = $field['decimals'];
@@ -189,9 +189,8 @@ class CrmCreator
                 $data['field_length'] = 1;
             }
 
-
             if ($field['type'] == 'VARCHAR') {
-                $data['validation'] = 'max:' . $field['length'];
+                $data['validation'] = 'max:'.$field['length'];
             }
             if (isset($data['required'])) {
 
@@ -201,7 +200,7 @@ class CrmCreator
                 $data['validation'] .= 'require';
             }
 
-            if (!in_array(strtolower($field['name']), $this->excludeFields)) {
+            if (! in_array(strtolower($field['name']), $this->excludeFields)) {
                 Field::insert(Field::getField($data, $cnt++));
             }
         }
@@ -212,21 +211,22 @@ class CrmCreator
     {
 
         foreach ($data as $item) {
-            if(isset($item['ref_table'])){
-                $item['ref_table'] = $this->prefix . $item['ref_table'];
+            if (isset($item['ref_table'])) {
+                $item['ref_table'] = $this->prefix.$item['ref_table'];
             }
 
             if ($item['type'] == 'FOREIGN') {
                 if ($item['ref_table'] != $name) {
 
                     $relationship_id = Relationship::insertGetId([
-                        'name' => strtolower($name) . '_' . strtolower($item['ref_table']),
-                        'modules' => implode(",", [
+                        'name' => strtolower($name).'_'.strtolower($item['ref_table']),
+                        'modules' => implode(',', [
                             $module_id,
                             Module::where('name', strtolower($item['ref_table']))->first()->id,
                         ]),
                         'related_field_types' => 'integer,integer',
                     ]);
+
                     return [$relationship_id, $name, $item['ref_table']];
                 }
             }
@@ -237,15 +237,15 @@ class CrmCreator
     {
 
         $id = ModuleSubpanel::insertGetId([
-            'name' => $primary_name . '_' . $secondary_name,
+            'name' => $primary_name.'_'.$secondary_name,
             'label' => 'Contacts',
             'relationship_id' => $relationshipId,
-            'module_id' => $moduleId
+            'module_id' => $moduleId,
         ]);
         foreach ($fields as $field) {
             SubpanelField::insert([
                 'subpanel_id' => $id,
-                'field_id' => $field->id
+                'field_id' => $field->id,
             ]);
         }
     }
@@ -254,8 +254,8 @@ class CrmCreator
     {
         return ModuleGroup::insertGetId([
             'name' => strtolower($name),
-            'label' => ucwords(preg_replace('/([^A-Z])([A-Z])/', "$1 $2",
-                str_replace("_", " ", $label)
+            'label' => ucwords(preg_replace('/([^A-Z])([A-Z])/', '$1 $2',
+                str_replace('_', ' ', $label)
             )),
             'view_order' => 0,
         ]);
@@ -265,10 +265,10 @@ class CrmCreator
     {
         return Module::insertGetId([
             'name' => strtolower($name),
-            'label' => ucwords(preg_replace('/([^A-Z])([A-Z])/', "$1 $2", $label)),
-            'description' => ucwords(preg_replace('/([^A-Z])([A-Z])/', "$1 $2",
-                    str_replace("_", " ", $label)
-                )) .
+            'label' => ucwords(preg_replace('/([^A-Z])([A-Z])/', '$1 $2', $label)),
+            'description' => ucwords(preg_replace('/([^A-Z])([A-Z])/', '$1 $2',
+                    str_replace('_', ' ', $label)
+                )).
                 ' module',
             'view_order' => $order,
             'module_group_id' => $group_id,
@@ -287,33 +287,28 @@ class CrmCreator
     {
         $name = 'iceburg';
 
-
-
-        if($data['save_connection'])
-        {
+        if ($data['save_connection']) {
             Connection::insert([
                 'user_id' => $this->user_id,
-                'host' =>  $data['host'],
+                'host' => $data['host'],
                 'database' => $data['db_name'],
                 'username' => $data['username'],
                 'password' => $data['password'],
                 'collation' => $data['collation'],
                 'charset' => $data['character_set'],
-                'port' => $data['port']
+                'port' => $data['port'],
             ]);
         }
-        if(isset($data['connection_id']) && intval($data['connection_id']) > 0)
-        {
-            $connection=Connection::where('id', $data['connection_id'])
+        if (isset($data['connection_id']) && intval($data['connection_id']) > 0) {
+            $connection = Connection::where('id', $data['connection_id'])
                 ->where(user_id, $this->user_id)->first();
-            $data['host']=$connection->host;
-            $data['db_name']=$connection->database;
-            $data['username']=$connection->username;
-            $data['password']=$connection->password;
-            $data['collation']=$connection->collation;
-            $data['character_set']==$connection->character_set;
+            $data['host'] = $connection->host;
+            $data['db_name'] = $connection->database;
+            $data['username'] = $connection->username;
+            $data['password'] = $connection->password;
+            $data['collation'] = $connection->collation;
+            $data['character_set'] == $connection->character_set;
         }
-
 
         //  Add validator code here
         Config::set('database.connections.mysql2.host', $data['host']);
@@ -325,7 +320,7 @@ class CrmCreator
 
         DB::reconnect();
         $returnData = [];
-        $data = DB::select("select * from information_schema.columns where  table_schema='" . addslashes($data['db_name']) . "' order by table_name, ordinal_position");
+        $data = DB::select("select * from information_schema.columns where  table_schema='".addslashes($data['db_name'])."' order by table_name, ordinal_position");
 
         $database = [];
         foreach ($data as $row) {
@@ -336,11 +331,11 @@ class CrmCreator
                 'name' => $row->COLUMN_NAME,
                 'type' => $row->DATA_TYPE,
             ];
-            if (!strpos($row->DATA_TYPE, 'text')) {
+            if (! strpos($row->DATA_TYPE, 'text')) {
                 $item['length'] = $row->NUMERIC_PRECISION > 0 ? $row->NUMERIC_PRECISION : $row->CHARACTER_MAXIMUM_LENGTH;
             }
             if ($row->DATA_TYPE == 'decimal') {
-                $values = explode(",", str_replace(['decimal('], ')', strtolower($row->COLUMN_TYPE)));
+                $values = explode(',', str_replace(['decimal('], ')', strtolower($row->COLUMN_TYPE)));
                 if (isset($values[1])) {
                     $item['decimals'] = $values[1];
                 }
@@ -351,8 +346,6 @@ class CrmCreator
 
         //  return $database;
 
-
-
         Config::set('database.connections.mysql2.database', env('DB_DATABASE'));
         Config::set('database.connections.mysql2.host', env('DB_HOST'));
         Config::set('database.connections.mysql2.port', env('DB_PORT'));
@@ -360,7 +353,6 @@ class CrmCreator
         Config::set('database.connections.mysql2.password', env('DB_PASSWORD'));
         Config::set('database.connections.mysql2.collation', env('DB_COLLATION'));
         Config::set('database.connections.mysql2.charset', env('DB_CHARACTER_SET'));
-
 
         DB::reconnect('mysql2');
 
@@ -385,11 +377,11 @@ class CrmCreator
                 'name' => $row->COLUMN_NAME,
                 'type' => $row->DATA_TYPE,
             ];
-            if (!strpos($row->DATA_TYPE, 'text')) {
+            if (! strpos($row->DATA_TYPE, 'text')) {
                 $item['length'] = $row->NUMERIC_PRECISION > 0 ? $row->NUMERIC_PRECISION : $row->CHARACTER_MAXIMUM_LENGTH;
             }
             if ($row->DATA_TYPE == 'decimal') {
-                $values = explode(",", str_replace(['decimal('], ')', strtolower($row->COLUMN_TYPE)));
+                $values = explode(',', str_replace(['decimal('], ')', strtolower($row->COLUMN_TYPE)));
                 if (isset($values[1])) {
                     $item['decimals'] = $values[1];
                 }
@@ -423,11 +415,11 @@ class CrmCreator
                 'name' => $row->COLUMN_NAME,
                 'type' => $row->DATA_TYPE,
             ];
-            if (!strpos($row->DATA_TYPE, 'text')) {
+            if (! strpos($row->DATA_TYPE, 'text')) {
                 $item['length'] = $row->NUMERIC_PRECISION > 0 ? $row->NUMERIC_PRECISION : $row->CHARACTER_MAXIMUM_LENGTH;
             }
             if ($row->DATA_TYPE == 'decimal') {
-                $values = explode(",", str_replace(['decimal('], ')', strtolower($row->COLUMN_TYPE)));
+                $values = explode(',', str_replace(['decimal('], ')', strtolower($row->COLUMN_TYPE)));
                 if (isset($values[1])) {
                     $item['decimals'] = $values[1];
                 }
@@ -439,7 +431,7 @@ class CrmCreator
         // Config::set('database.connections.mysql.database', env('DB_DATABASE'));
         // DB::reconnect('mysql');
         return response()->json([
-            $database
+            $database,
         ]);
         // return $database;
 
@@ -448,18 +440,15 @@ class CrmCreator
     public function copyBaseDatabases($schemaName, $type = 'base', $connection = [])
     {
 
-
-        $tables = $this->getTableNames('defaultcrm_' . $type);
+        $tables = $this->getTableNames('defaultcrm_'.$type);
         if (count($connection) > 0) {
 
         }
 
         foreach ($tables as $table) {
-            DB::statement("CREATE TABLE $schemaName." . $table . " LIKE defaultcrm_" . $type . "." . $table);
-            if ($table == 'ice_roles')
-            {
-               DB::statement("INSERT INTO $schemaName." . $table . " SELECT * FROM defaultcrm_" . $type . "." . $table);
-
+            DB::statement("CREATE TABLE $schemaName.".$table.' LIKE defaultcrm_'.$type.'.'.$table);
+            if ($table == 'ice_roles') {
+               DB::statement("INSERT INTO $schemaName.".$table.' SELECT * FROM defaultcrm_'.$type.'.'.$table);
 
             }
          }
@@ -472,23 +461,20 @@ class CrmCreator
 
         $this->copyBaseDatabases($schemaName, 'base', $connection);
 
-
         Config::set('database.connections.mysql2.database', $schemaName);
         DB::reconnect();
-
 
         //  $this->createBaseTables();
         $cnt = 0;
         $module_group_id = 0;
         foreach ($parserTables as $key => $table) {
             $table['label'] = $table['name'];
-            $table['name'] = $this->prefix . $table['name'];
+            $table['name'] = $this->prefix.$table['name'];
             if ($cnt == 0 || ($cnt <= 12 && $cnt % 3 == 1)) {
                 $module_group_id = $this->createModuleGroup($table['name'], $table['label']);
             } elseif ($cnt > 12) {
                 $module_group_id = 6;
             }
-
 
             $module_id = $this->createModule($table['name'], $table['label'], $cnt, $module_group_id);
             $this->createFields($module_id, $table['fields']);
@@ -496,7 +482,7 @@ class CrmCreator
         }
 
         foreach ($parserTables as $key => $table) {
-            $table['name'] = $this->prefix . $table['name'];
+            $table['name'] = $this->prefix.$table['name'];
             $module = Module::where('name', $table['name'])->first();
             if (isset($table['indexes'])) {
                 [$relationship_id, $primary_name, $secondary_name] = $this->createRelationship($module->id, $module->name, $table['indexes']);
@@ -508,21 +494,17 @@ class CrmCreator
             }
         }
 
-
         $relationship = new Relationship();
         $relationship->generate($seedAmount);
 
-
         //$this->AddUser($data);
         $this->AddUsers();
-
 
         $this->AddSettings();
         $this->AddRoles();
 
         $this->addDataletTypes();
         $this->addDatalets();
-
 
         if ($generateTable == 1) {
             $module = new Module();
@@ -545,6 +527,7 @@ class CrmCreator
 
         Config::set('database.connections.mysql2.database', env('DB_DATABASE'));
         DB::reconnect();
+
         return true;
     }
 
@@ -553,11 +536,11 @@ class CrmCreator
         Config::set('database.connections.mysql2.database', $name);
         DB::reconnect();
 
-        if(!$data['name'] || strlen($data['name']) < 1) {
-            $data['name']='CRM';
+        if (! $data['name'] || strlen($data['name']) < 1) {
+            $data['name'] = 'CRM';
         }
-        if(!$data['description'] || strlen($data['description']) < 1) {
-            $data['description']='';
+        if (! $data['description'] || strlen($data['description']) < 1) {
+            $data['description'] = '';
         }
 
         Setting::where('name', 'like', 'title')
@@ -575,59 +558,64 @@ class CrmCreator
 
     public function createPredefinedDatabase($schemaName, $type = 'iceburg'): bool
     {
-        $tables = $this->getTableNames('defaultcrm_' . $type);
+        $tables = $this->getTableNames('defaultcrm_'.$type);
         foreach ($tables as $table) {
-            DB::statement("CREATE TABLE $schemaName." . $table . " LIKE defaultcrm_" . $type . "." . $table);
-            DB::statement("INSERT INTO $schemaName." . $table . " SELECT * FROM defaultcrm_" . $type . "." . $table);
+            DB::statement("CREATE TABLE $schemaName.".$table.' LIKE defaultcrm_'.$type.'.'.$table);
+            DB::statement("INSERT INTO $schemaName.".$table.' SELECT * FROM defaultcrm_'.$type.'.'.$table);
         }
+
         return true;
     }
 
-    public function createDatabase($name = '', $type, $data=[]): string
+    public function createDatabase($name, $type, $data = []): string
     {
-        $schemaName = "user_" . strtolower(Str::random(8));
+        $schemaName = 'user_'.strtolower(Str::random(8));
         if (strlen($name) > 0) {
             $schemaName = $name;
         }
-        DB::statement('CREATE DATABASE ' . $schemaName);
+        DB::statement('CREATE DATABASE '.$schemaName);
         if (strlen($name) < 1) {
             Crm::insert([
                 'name' => $schemaName,
-                'label' => $data['name'] ?: substr(str_shuffle("qwertyuiopasdfghjklzxcvbnm"),0,8),
+                'label' => $data['name'] ?: substr(str_shuffle('qwertyuiopasdfghjklzxcvbnm'), 0, 8),
                 'user_id' => $this->user_id ?: 0,
                 'type_id' => CrmType::where('name', $type)->value('id') ?: 1,
                 'status_id' => 1,
                 'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
+                'updated_at' => date('Y-m-d H:i:s'),
             ]);
         }
 
         return $schemaName;
     }
 
-
-    public function createTemplateCRM($type, $data){
+    public function createTemplateCRM($type, $data)
+    {
 
         $schemaName = $this->createDatabase(null, $type, $data);
         $status = $this->createPredefinedDatabase($schemaName, $type);
         Crm::where('name', $schemaName)
             ->update(['status_id' => 2]);
+
         return ['status' => $status, 'name' => $schemaName];
     }
 
-    public function createConnectionCRM($data){
-        $status=false;
+    public function createConnectionCRM($data)
+    {
+        $status = false;
         $schemaName = $this->createDatabase(null, $data['type'], $data);
-        $parserData=$this->getRemoteDatabase3($data);
+        $parserData = $this->getRemoteDatabase3($data);
         $status = $this->processSQL($parserData, $schemaName, $data);
         //$this->insertDataFromRemoteDatabase($data, $parserData);
         Crm::where('name', $schemaName)
             ->update(['status_id' => 2]);
-        return ['status' => $status, 'name' => $schemaName];;
+
+        return ['status' => $status, 'name' => $schemaName];
     }
 
-    public function createUploadSchemaCRM($data){
-        $status=false;
+    public function createUploadSchemaCRM($data)
+    {
+        $status = false;
         $schemaName = $this->createDatabase(null, $data['type'], $data);
         /*$sql=$data['input_file']->get();
         if(isset($data['input_file'])){
@@ -642,51 +630,55 @@ class CrmCreator
         $status = $this->processSQL($this->parser->tables, $schemaName);
         Crm::where('name', $schemaName)
             ->update(['status_id' => 2]);
+
         return ['status' => $status, 'name' => $schemaName];
     }
 
-    public function createCRMOnTopOfExistingDatabase($data){
+    public function createCRMOnTopOfExistingDatabase($data)
+    {
         return $status;
     }
 
-    public function create(){
-        $data=$this->data;
+    public function create()
+    {
+        $data = $this->data;
         //dd($data);
-        switch($data['type']){
+        switch ($data['type']) {
             case 'someothercrmtemplatename':
             case 'iceburg':
             case 'default':
-                if($data['type'] == 'default') $type='iceburg';
-                $status=$this->createTemplateCRM($type, $data);
+                if ($data['type'] == 'default') {
+                $type = 'iceburg';
+                }
+                $status = $this->createTemplateCRM($type, $data);
                 break;
             case 'connection':
-                $status=$this->createConnectionCRM($data);
+                $status = $this->createConnectionCRM($data);
                 break;
             case 'ontop':
-                $status=$this->createCRMOnTopOfExistingDatabase($data);
+                $status = $this->createCRMOnTopOfExistingDatabase($data);
                 break;
             case 'uploadschema':
-                $status=$this->createUploadSchemaCRM($data);
+                $status = $this->createUploadSchemaCRM($data);
                 break;
                 default:
                 break;
         }
 
-
         // ?
         //$this->updateSettingData($status['name'], $data);
-        if($status['status'] == 1)
-        {
+        if ($status['status'] == 1) {
             $this->updateSettingData($status['name'], $data);
         }
-        $status['last_error']=$this->lastError;
+        $status['last_error'] = $this->lastError;
+
         return $status;
     }
 
     public function deleteDatabases()
     {
         Crm::all()->each(function ($db) {
-            DB::statement("DROP DATABASE " . $db->name);
+            DB::statement('DROP DATABASE '.$db->name);
         });
        // DB::statement('truncate `databases`');
         //DB::statement("DROP DATABASE " . $name);
@@ -695,7 +687,7 @@ class CrmCreator
     private function getTableNames($name = 'iceburg')
     {
         $tableNames = [];
-        print $name;
+        echo $name;
         Config::set('database.connections.mysql2.database', $name);
         //DB::connection('mysql')->reconnect();
         DB::reconnect();
@@ -705,7 +697,7 @@ class CrmCreator
         Config::set('database.connections.mysql2.database', env('DB_DATABASE'));
         DB::reconnect();
         foreach ($tables as $table) {
-            $tableNames[] = $table->{'Tables_in_' . $name};
+            $tableNames[] = $table->{'Tables_in_'.$name};
         }
 
         return $tableNames;
@@ -715,19 +707,18 @@ class CrmCreator
     {
         config(
             [
-                'database.connections.fly' =>
-                    [
-                        'driver' => 'mysql',
-                        'host' => 'localhost',
-                        'port' => 3306,
-                        'database' => $name,
-                        'username' => env('DB_USERNAME'),
-                        'password' => env('DB_PASSWORD'),
-                        'charset' => 'utf8mb4',
-                        'collation' => 'utf8mb4_unicode_ci',
-                    ],
+                'database.connections.fly' => [
+                    'driver' => 'mysql',
+                    'host' => 'localhost',
+                    'port' => 3306,
+                    'database' => $name,
+                    'username' => env('DB_USERNAME'),
+                    'password' => env('DB_PASSWORD'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                ],
             ]);
-        DB::reconnect("fly");
+        DB::reconnect('fly');
     }
 
     private function addModulesAndRoles()
@@ -739,12 +730,11 @@ class CrmCreator
             Module::all()->each(function ($module) use ($record) {
                 Permission::insert([
                     'role_id' => $record->id,
-                    'module_id' => $module->id
+                    'module_id' => $module->id,
                 ]);
             });
         }
     }
-
 
     private function addDataletTypes()
     {
@@ -766,13 +756,13 @@ class CrmCreator
         Datalet::truncate();
         Datalet::insert([
 
-            ['type'=>7,
-                'module_id'=>2,
+            ['type' => 7,
+                'module_id' => 2,
                 'label' => 'CRM Stats',
                 'size' => 12,
                 'display_order' => 0],
-            ['type'=>8,
-                'module_id'=>1,
+            ['type' => 8,
+                'module_id' => 1,
                 'label' => 'Totals Report',
                 'size' => 12,
                 'display_order' => 6],
@@ -791,68 +781,69 @@ class CrmCreator
                 ['name' => 'Update Relationship Record'],
                 ['name' => 'Delete Module Record'],
                 ['name' => 'Delete Relationship Record'],
-                ['name' => 'Field Change Status']
+                ['name' => 'Field Change Status'],
             ]
         );
     }
 
-    private function AddUser($user_info=[])
+    private function AddUser($user_info = [])
     {
-        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000' . rand(10, 99) . '.jpg');
+        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000'.rand(10, 99).'.jpg');
         $userId = DB::table('ice_users')->insertGetId([
             'name' => $user_info['login_name'],
             'email' => $user_info['login_email'],
-            'profile_pic' => 'data:image/jpg;base64,' . base64_encode($image),
+            'profile_pic' => 'data:image/jpg;base64,'.base64_encode($image),
             'password' => bcrypt($user_info['login_password']),
-            'role_id' => 1
+            'role_id' => 1,
         ]);
     }
+
     private function AddUsers()
     {
         User::truncate();
-        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000' . rand(10, 99) . '.jpg');
+        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000'.rand(10, 99).'.jpg');
         $userId = DB::table('ice_users')->insertGetId([
             'name' => 'Admin',
             'email' => 'admin@iceburg.ca',
-            'profile_pic' => 'data:image/jpg;base64,' . base64_encode($image),
+            'profile_pic' => 'data:image/jpg;base64,'.base64_encode($image),
             'password' => bcrypt('admin'),
-            'role_id' => 1
+            'role_id' => 1,
         ]);
 
-        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000' . rand(10, 99) . '.jpg');
+        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000'.rand(10, 99).'.jpg');
         $userId = DB::table('ice_users')->insertGetId([
             'name' => 'User',
             'email' => 'user@iceburg.ca',
-            'profile_pic' => 'data:image/jpg;base64,' . base64_encode($image),
+            'profile_pic' => 'data:image/jpg;base64,'.base64_encode($image),
             'password' => bcrypt('user'),
-            'role_id' => 2
+            'role_id' => 2,
         ]);
 
-        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000' . rand(10, 99) . '.jpg');
+        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000'.rand(10, 99).'.jpg');
         $userId = DB::table('ice_users')->insertGetId([
             'name' => 'Sales',
             'email' => 'sales@iceburg.ca',
-            'profile_pic' => 'data:image/jpg;base64,' . base64_encode($image),
+            'profile_pic' => 'data:image/jpg;base64,'.base64_encode($image),
             'password' => bcrypt('sales'),
-            'role_id' => 3
+            'role_id' => 3,
         ]);
 
-        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000' . rand(10, 99) . '.jpg');
+        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000'.rand(10, 99).'.jpg');
         $userId = DB::table('ice_users')->insertGetId([
             'name' => 'Accounting',
             'email' => 'accounting@iceburg.ca',
-            'profile_pic' => 'data:image/jpg;base64,' . base64_encode($image),
+            'profile_pic' => 'data:image/jpg;base64,'.base64_encode($image),
             'password' => bcrypt('accounting'),
-            'role_id' => 4
+            'role_id' => 4,
         ]);
 
-        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000' . rand(10, 99) . '.jpg');
+        $image = file_get_contents('http://demo.iceburg.ca/seed/people/0000'.rand(10, 99).'.jpg');
         $userId = DB::table('ice_users')->insertGetId([
             'name' => 'Marketing',
             'email' => 'marketing@iceburg.ca',
-            'profile_pic' => 'data:image/jpg;base64,' . base64_encode($image),
+            'profile_pic' => 'data:image/jpg;base64,'.base64_encode($image),
             'password' => bcrypt('marketing'),
-            'role_id' => 5
+            'role_id' => 5,
         ]);
     }
 
@@ -865,7 +856,7 @@ class CrmCreator
             ['id' => 4, 'name' => 'Accounting'],
             ['id' => 5, 'name' => 'Support'],
             ['id' => 6, 'name' => 'Marketing'],
-            ['id' => 7, 'name' => 'HR']
+            ['id' => 7, 'name' => 'HR'],
         ]);
     }
 
@@ -874,32 +865,32 @@ class CrmCreator
 
         DB::table('ice_settings')->insert([
             'name' => 'theme',
-            'value' => 'light'
+            'value' => 'light',
         ]);
 
         DB::table('ice_settings')->insert([
             'name' => 'search_per_page',
-            'value' => '10'
+            'value' => '10',
         ]);
 
         DB::table('ice_settings')->insert([
             'name' => 'submodule_search_per_page',
-            'value' => '10'
+            'value' => '10',
         ]);
 
         DB::table('ice_settings')->insert([
             'name' => 'title',
-            'value' => 'Iceburg CRM'
+            'value' => 'Iceburg CRM',
         ]);
 
         DB::table('ice_settings')->insert([
             'name' => 'description',
-            'value' => 'Open Source, data driven, extendable, unlimited relationships, convertable modules, 29 default themes, light/dark themes'
+            'value' => 'Open Source, data driven, extendable, unlimited relationships, convertable modules, 29 default themes, light/dark themes',
         ]);
 
         DB::table('ice_settings')->insert([
             'name' => 'max_export_records',
-            'value' => 10000
+            'value' => 10000,
         ]);
 
     }
@@ -928,9 +919,8 @@ class CrmCreator
             'view_order' => 0,
             'module_group_id' => 6,
             'faker_seed' => 0,
-            'status' => 1
+            'status' => 1,
         ]);
-
 
         Field::insert(Field::getField([
             'name' => 'name',
@@ -946,25 +936,24 @@ class CrmCreator
     {
         return '[{"account_status":{"name":"account_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts":{"name":"accounts","fields":[{"name":"company_logo","type":"mediumtext"},{"name":"name","type":"varchar","length":255},{"name":"first_name","type":"varchar","length":255},{"name":"last_name","type":"varchar","length":255},{"name":"color","type":"varchar","length":255},{"name":"email","type":"varchar","length":255},{"name":"phone","type":"varchar","length":255},{"name":"fax","type":"varchar","length":255},{"name":"website","type":"varchar","length":255},{"name":"address","type":"varchar","length":255},{"name":"city","type":"varchar","length":255},{"name":"zip","type":"varchar","length":255},{"name":"state","type":"int","length":10},{"name":"country","type":"int","length":10},{"name":"description","type":"varchar","length":255},{"name":"status","type":"int","length":10},{"name":"assigned_to","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_cases":{"name":"accounts_cases","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"cases_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_contacts":{"name":"accounts_contacts","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"contacts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_contracts":{"name":"accounts_contracts","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"contracts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_invoices":{"name":"accounts_invoices","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"invoices_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_invoices_users":{"name":"accounts_invoices_users","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"invoices_id","type":"int","length":10},{"name":"users_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_meetings":{"name":"accounts_meetings","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"meetings_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"accounts_opportunities":{"name":"accounts_opportunities","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"opportunities_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"campaign_status":{"name":"campaign_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"campaign_types":{"name":"campaign_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"campaigns":{"name":"campaigns","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"budget","type":"double","length":22},{"name":"forecast","type":"double","length":22},{"name":"actual","type":"double","length":22},{"name":"impressions","type":"int","length":10},{"name":"currency","type":"int","length":10},{"name":"campaign_type","type":"int","length":10},{"name":"creative","type":"mediumtext"},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"campaigns_accounts":{"name":"campaigns_accounts","fields":[{"name":"id","type":"bigint","length":20},{"name":"campaigns_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"campaigns_tasks":{"name":"campaigns_tasks","fields":[{"name":"id","type":"bigint","length":20},{"name":"campaigns_id","type":"int","length":10},{"name":"tasks_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"case_priorities":{"name":"case_priorities","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"case_status":{"name":"case_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"case_types":{"name":"case_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"cases":{"name":"cases","fields":[{"name":"subject","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"case_number","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"priority","type":"int","length":10},{"name":"type","type":"int","length":10},{"name":"resolution","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"contacts":{"name":"contacts","fields":[{"name":"profile_pic","type":"mediumtext"},{"name":"first_name","type":"varchar","length":255},{"name":"last_name","type":"varchar","length":255},{"name":"email","type":"varchar","length":255},{"name":"phone","type":"varchar","length":255},{"name":"fax","type":"varchar","length":255},{"name":"website","type":"varchar","length":255},{"name":"address","type":"varchar","length":255},{"name":"city","type":"varchar","length":255},{"name":"state","type":"int","length":10},{"name":"zip","type":"varchar","length":255},{"name":"country","type":"int","length":10},{"name":"description","type":"varchar","length":255},{"name":"status","type":"int","length":10},{"name":"email_receive","type":"tinyint","length":3},{"name":"assigned_to","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"contract_status":{"name":"contract_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"contract_types":{"name":"contract_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"contracts":{"name":"contracts","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"discount","type":"double","length":22},{"name":"taxes","type":"double","length":22},{"name":"shipping","type":"double","length":22},{"name":"subtotal","type":"double","length":22},{"name":"total","type":"double","length":22},{"name":"currency","type":"int","length":10},{"name":"signed_by","type":"int","length":10},{"name":"assigned_to","type":"int","length":10},{"name":"contract_type","type":"int","length":10},{"name":"start_date","type":"int","length":10},{"name":"end_date","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"contracts_lineitems":{"name":"contracts_lineitems","fields":[{"name":"id","type":"bigint","length":20},{"name":"contracts_id","type":"int","length":10},{"name":"lineitems_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"countries":{"name":"countries","fields":[{"name":"code","type":"varchar","length":255},{"name":"name","type":"varchar","length":255},{"name":"flag","type":"mediumtext"},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"currency":{"name":"currency","fields":[{"name":"name","type":"varchar","length":255},{"name":"code","type":"varchar","length":255},{"name":"symbol","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"datalet_types":{"name":"datalet_types","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":255},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"datalets":{"name":"datalets","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":255},{"name":"label","type":"varchar","length":255},{"name":"type","type":"int","length":10},{"name":"role_id","type":"int","length":10},{"name":"field_id","type":"int","length":10},{"name":"module_id","type":"int","length":10},{"name":"relationship_id","type":"int","length":10},{"name":"size","type":"int","length":10},{"name":"display_order","type":"int","length":10},{"name":"active","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"discount_types":{"name":"discount_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"document_status":{"name":"document_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"document_types":{"name":"document_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents":{"name":"documents","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"file_link","type":"varchar","length":255},{"name":"document_type","type":"int","length":10},{"name":"document_status","type":"int","length":10},{"name":"expire_date","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_accounts":{"name":"documents_accounts","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_cases":{"name":"documents_cases","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"cases_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_contracts":{"name":"documents_contracts","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"contracts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_meetings":{"name":"documents_meetings","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"meetings_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_opportunities":{"name":"documents_opportunities","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"opportunities_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_tasks":{"name":"documents_tasks","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"tasks_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"documents_users":{"name":"documents_users","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"users_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"failed_jobs":{"name":"failed_jobs","fields":[{"name":"id","type":"bigint","length":20},{"name":"uuid","type":"varchar","length":255},{"name":"connection","type":"text","length":65535},{"name":"queue","type":"text","length":65535},{"name":"payload","type":"longtext"},{"name":"exception","type":"longtext"},{"name":"failed_at","type":"timestamp","length":null}]},"fields":{"name":"fields","fields":[{"name":"name","type":"varchar","length":245},{"name":"label","type":"varchar","length":245},{"name":"module_id","type":"int","length":10},{"name":"validation","type":"varchar","length":245},{"name":"input_type","type":"varchar","length":245},{"name":"data_type","type":"varchar","length":100},{"name":"field_length","type":"int","length":10},{"name":"required","type":"int","length":10},{"name":"is_nullable","type":"tinyint","length":3},{"name":"default_value","type":"varchar","length":245},{"name":"read_only","type":"tinyint","length":3},{"name":"related_module_id","type":"int","length":10},{"name":"related_field_id","type":"varchar","length":255},{"name":"related_value_id","type":"varchar","length":255},{"name":"decimal_places","type":"int","length":10},{"name":"status","type":"tinyint","length":3},{"name":"id","type":"bigint","length":20},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"group_types":{"name":"group_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"groups":{"name":"groups","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"groups_accounts":{"name":"groups_accounts","fields":[{"name":"id","type":"bigint","length":20},{"name":"groups_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"input_masks":{"name":"input_masks","fields":[{"name":"id","type":"bigint","length":20},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"input_types":{"name":"input_types","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":128},{"name":"mask","type":"varchar","length":128},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"invoice_status":{"name":"invoice_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"invoices":{"name":"invoices","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"currency","type":"int","length":10},{"name":"amount","type":"double","length":22},{"name":"tax","type":"double","length":22},{"name":"total","type":"double","length":22},{"name":"subtotal","type":"double","length":22},{"name":"discount","type":"double","length":22},{"name":"billing_address","type":"varchar","length":255},{"name":"billing_city","type":"varchar","length":255},{"name":"billing_zip","type":"varchar","length":255},{"name":"billing_state","type":"int","length":10},{"name":"billing_country","type":"int","length":10},{"name":"shipping_address","type":"varchar","length":255},{"name":"shipping_city","type":"varchar","length":255},{"name":"shipping_zip","type":"varchar","length":255},{"name":"shipping_state","type":"int","length":10},{"name":"shipping_country","type":"int","length":10},{"name":"sign_date","type":"int","length":10},{"name":"expire_date","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"lead_sources":{"name":"lead_sources","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"lead_status":{"name":"lead_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"lead_types":{"name":"lead_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"leads":{"name":"leads","fields":[{"name":"first_name","type":"varchar","length":255},{"name":"last_name","type":"varchar","length":255},{"name":"email","type":"varchar","length":255},{"name":"phone","type":"varchar","length":255},{"name":"fax","type":"varchar","length":255},{"name":"website","type":"varchar","length":255},{"name":"address","type":"varchar","length":255},{"name":"city","type":"varchar","length":255},{"name":"state","type":"int","length":10},{"name":"zip","type":"varchar","length":255},{"name":"country","type":"int","length":10},{"name":"description","type":"varchar","length":255},{"name":"status","type":"int","length":10},{"name":"email_receive","type":"tinyint","length":3},{"name":"assigned_to","type":"int","length":10},{"name":"lead_type","type":"int","length":10},{"name":"lead_source","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"leads_accounts_opportunities":{"name":"leads_accounts_opportunities","fields":[{"name":"id","type":"bigint","length":20},{"name":"leads_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"opportunities_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"lineitems":{"name":"lineitems","fields":[{"name":"product_id","type":"int","length":10},{"name":"quantity","type":"int","length":10},{"name":"price","type":"double","length":22},{"name":"unit_price","type":"double","length":22},{"name":"cost","type":"double","length":22},{"name":"discount","type":"double","length":22},{"name":"discount_type","type":"int","length":10},{"name":"taxes","type":"double","length":22},{"name":"gross","type":"double","length":22},{"name":"net","type":"double","length":22},{"name":"description","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"logs":{"name":"logs","fields":[{"name":"id","type":"bigint","length":20},{"name":"module_id","type":"int","length":10},{"name":"type","type":"varchar","length":16},{"name":"message","type":"varchar","length":200},{"name":"user_id","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"meeting_status":{"name":"meeting_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"meeting_types":{"name":"meeting_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"meetings":{"name":"meetings","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"start_date","type":"int","length":10},{"name":"end_date","type":"int","length":10},{"name":"start_time","type":"int","length":10},{"name":"end_time","type":"int","length":10},{"name":"reminder_time","type":"int","length":10},{"name":"location","type":"varchar","length":255},{"name":"phone","type":"varchar","length":255},{"name":"link","type":"varchar","length":255},{"name":"meeting_password","type":"varchar","length":255},{"name":"video_recording","type":"mediumtext"},{"name":"audio_recording","type":"mediumtext"},{"name":"contract","type":"int","length":10},{"name":"types","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"assigned_to","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"migrations":{"name":"migrations","fields":[{"name":"id","type":"int","length":10},{"name":"migration","type":"varchar","length":255},{"name":"batch","type":"int","length":10}]},"module_convertables":{"name":"module_convertables","fields":[{"name":"id","type":"bigint","length":20},{"name":"primary_module_id","type":"int","length":10},{"name":"module_id","type":"int","length":10},{"name":"level","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"module_groups":{"name":"module_groups","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":245},{"name":"label","type":"varchar","length":245},{"name":"view_order","type":"int","length":10}]},"module_subpanels":{"name":"module_subpanels","fields":[{"name":"id","type":"bigint","length":20},{"name":"subpanel_filter","type":"varchar","length":255},{"name":"name","type":"varchar","length":245},{"name":"label","type":"varchar","length":245},{"name":"module_id","type":"varchar","length":255},{"name":"list_size","type":"int","length":10},{"name":"list_order_column","type":"varchar","length":255},{"name":"list_order","type":"varchar","length":255},{"name":"relationship_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"saved_search_id","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"modules":{"name":"modules","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":100},{"name":"label","type":"varchar","length":255},{"name":"description","type":"varchar","length":245},{"name":"status","type":"int","length":10},{"name":"faker_seed","type":"int","length":10},{"name":"create_table","type":"int","length":10},{"name":"view_order","type":"int","length":10},{"name":"admin","type":"int","length":10},{"name":"parent_id","type":"int","length":10},{"name":"primary","type":"int","length":10},{"name":"icon","type":"varchar","length":128},{"name":"module_group_id","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"modules_datalets":{"name":"modules_datalets","fields":[{"name":"id","type":"bigint","length":20},{"name":"modules_id","type":"int","length":10},{"name":"datalets_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"modules_fields":{"name":"modules_fields","fields":[{"name":"id","type":"bigint","length":20},{"name":"modules_id","type":"int","length":10},{"name":"fields_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"modules_subpanels":{"name":"modules_subpanels","fields":[{"name":"id","type":"bigint","length":20},{"name":"modules_id","type":"int","length":10},{"name":"module_subpanels_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes":{"name":"notes","fields":[{"name":"subject","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_accounts":{"name":"notes_accounts","fields":[{"name":"id","type":"bigint","length":20},{"name":"notes_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_cases":{"name":"notes_cases","fields":[{"name":"id","type":"bigint","length":20},{"name":"documents_id","type":"int","length":10},{"name":"cases_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_contracts":{"name":"notes_contracts","fields":[{"name":"id","type":"bigint","length":20},{"name":"notes_id","type":"int","length":10},{"name":"contracts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_meetings":{"name":"notes_meetings","fields":[{"name":"id","type":"bigint","length":20},{"name":"notes_id","type":"int","length":10},{"name":"meetings_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_opportunities":{"name":"notes_opportunities","fields":[{"name":"id","type":"bigint","length":20},{"name":"notes_id","type":"int","length":10},{"name":"opportunities_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_tasks":{"name":"notes_tasks","fields":[{"name":"id","type":"bigint","length":20},{"name":"notes_id","type":"int","length":10},{"name":"tasks_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"notes_users":{"name":"notes_users","fields":[{"name":"id","type":"bigint","length":20},{"name":"notes_id","type":"int","length":10},{"name":"users_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities":{"name":"opportunities","fields":[{"name":"name","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"type","type":"int","length":10},{"name":"amount","type":"double","length":22},{"name":"probability","type":"int","length":10},{"name":"close_date","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities_cases":{"name":"opportunities_cases","fields":[{"name":"id","type":"bigint","length":20},{"name":"opportunities_id","type":"int","length":10},{"name":"cases_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities_contacts":{"name":"opportunities_contacts","fields":[{"name":"id","type":"bigint","length":20},{"name":"accounts_id","type":"int","length":10},{"name":"opportunities_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities_contracts":{"name":"opportunities_contracts","fields":[{"name":"id","type":"bigint","length":20},{"name":"opportunities_id","type":"int","length":10},{"name":"contracts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities_meetings":{"name":"opportunities_meetings","fields":[{"name":"id","type":"bigint","length":20},{"name":"opportunities_id","type":"int","length":10},{"name":"meetings_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities_quotes":{"name":"opportunities_quotes","fields":[{"name":"id","type":"bigint","length":20},{"name":"opportunities_id","type":"int","length":10},{"name":"quotes_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunities_quotes_accounts":{"name":"opportunities_quotes_accounts","fields":[{"name":"id","type":"bigint","length":20},{"name":"opportunities_id","type":"int","length":10},{"name":"quotes_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunity_status":{"name":"opportunity_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"opportunity_types":{"name":"opportunity_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"orders":{"name":"orders","fields":[{"name":"first_name","type":"varchar","length":255},{"name":"last_name","type":"varchar","length":255},{"name":"email","type":"varchar","length":255},{"name":"phone","type":"varchar","length":255},{"name":"status","type":"int","length":10},{"name":"currency","type":"int","length":10},{"name":"amount","type":"double","length":22},{"name":"tax","type":"double","length":22},{"name":"total","type":"double","length":22},{"name":"subtotal","type":"double","length":22},{"name":"discount","type":"double","length":22},{"name":"billing_address","type":"varchar","length":255},{"name":"billing_city","type":"varchar","length":255},{"name":"billing_zip","type":"varchar","length":255},{"name":"billing_state","type":"int","length":10},{"name":"billing_country","type":"int","length":10},{"name":"shipping_address","type":"varchar","length":255},{"name":"shipping_city","type":"varchar","length":255},{"name":"shipping_zip","type":"varchar","length":255},{"name":"shipping_state","type":"int","length":10},{"name":"shipping_country","type":"int","length":10},{"name":"product","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"password_resets":{"name":"password_resets","fields":[{"name":"email","type":"varchar","length":255},{"name":"token","type":"varchar","length":255},{"name":"created_at","type":"timestamp","length":null}]},"permissions":{"name":"permissions","fields":[{"name":"id","type":"bigint","length":20},{"name":"module_id","type":"int","length":10},{"name":"role_id","type":"int","length":10},{"name":"can_read","type":"int","length":10},{"name":"can_write","type":"int","length":10},{"name":"can_delete","type":"int","length":10},{"name":"can_export","type":"int","length":10},{"name":"can_import","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"personal_access_tokens":{"name":"personal_access_tokens","fields":[{"name":"id","type":"bigint","length":20},{"name":"tokenable_type","type":"varchar","length":255},{"name":"tokenable_id","type":"bigint","length":20},{"name":"name","type":"varchar","length":255},{"name":"token","type":"varchar","length":64},{"name":"abilities","type":"text","length":65535},{"name":"last_used_at","type":"timestamp","length":null},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"products":{"name":"products","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"project_priorities":{"name":"project_priorities","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"project_status":{"name":"project_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"project_types":{"name":"project_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"projects":{"name":"projects","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"priority","type":"int","length":10},{"name":"type","type":"int","length":10},{"name":"start_date","type":"int","length":10},{"name":"end_date","type":"int","length":10},{"name":"due_date","type":"int","length":10},{"name":"completed_date","type":"int","length":10},{"name":"estimated_hours","type":"int","length":10},{"name":"actual_hours","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"projects_accounts":{"name":"projects_accounts","fields":[{"name":"id","type":"bigint","length":20},{"name":"projects_id","type":"int","length":10},{"name":"accounts_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"projects_tasks":{"name":"projects_tasks","fields":[{"name":"id","type":"bigint","length":20},{"name":"projects_id","type":"int","length":10},{"name":"tasks_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"quote_status":{"name":"quote_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"quotes":{"name":"quotes","fields":[{"name":"name","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"currency","type":"int","length":10},{"name":"amount","type":"double","length":22},{"name":"tax","type":"double","length":22},{"name":"total","type":"double","length":22},{"name":"subtotal","type":"double","length":22},{"name":"discount","type":"double","length":22},{"name":"billing_address","type":"varchar","length":255},{"name":"billing_city","type":"varchar","length":255},{"name":"billing_zip","type":"varchar","length":255},{"name":"billing_state","type":"int","length":10},{"name":"billing_country","type":"int","length":10},{"name":"shipping_address","type":"varchar","length":255},{"name":"shipping_city","type":"varchar","length":255},{"name":"shipping_zip","type":"varchar","length":255},{"name":"shipping_state","type":"int","length":10},{"name":"shipping_country","type":"int","length":10},{"name":"expire_date","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"relationship_modules":{"name":"relationship_modules","fields":[{"name":"id","type":"bigint","length":20},{"name":"module_id","type":"int","length":10},{"name":"relationship_id","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"relationships":{"name":"relationships","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":245},{"name":"modules","type":"varchar","length":255},{"name":"related_field_types","type":"varchar","length":255},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"roles":{"name":"roles","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"settings":{"name":"settings","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":255},{"name":"value","type":"varchar","length":255},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"states":{"name":"states","fields":[{"name":"code","type":"varchar","length":255},{"name":"abbreviation","type":"varchar","length":255},{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"subpanel_fields":{"name":"subpanel_fields","fields":[{"name":"id","type":"bigint","length":20},{"name":"field_id","type":"int","length":10},{"name":"subpanel_id","type":"int","length":10},{"name":"label","type":"varchar","length":255},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"task_priorities":{"name":"task_priorities","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"task_status":{"name":"task_status","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"task_types":{"name":"task_types","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"tasks":{"name":"tasks","fields":[{"name":"subject","type":"varchar","length":255},{"name":"description","type":"varchar","length":255},{"name":"assigned_to","type":"int","length":10},{"name":"task_types","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"task_priority","type":"int","length":10},{"name":"due_date","type":"int","length":10},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"themes":{"name":"themes","fields":[{"name":"name","type":"varchar","length":255},{"name":"id","type":"bigint","length":20},{"name":"slug","type":"varchar","length":64},{"name":"soft_delete","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"user_meetings":{"name":"user_meetings","fields":[{"name":"id","type":"bigint","length":20},{"name":"users_id","type":"int","length":10},{"name":"meetings_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"users":{"name":"users","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":255},{"name":"email","type":"varchar","length":255},{"name":"email_verified_at","type":"timestamp","length":null},{"name":"password","type":"varchar","length":255},{"name":"profile_pic","type":"mediumtext"},{"name":"role_id","type":"int","length":10},{"name":"slug","type":"varchar","length":255},{"name":"remember_token","type":"varchar","length":100},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"users_tasks":{"name":"users_tasks","fields":[{"name":"id","type":"bigint","length":20},{"name":"users_id","type":"int","length":10},{"name":"tasks_id","type":"int","length":10},{"name":"status","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"work_flow_data":{"name":"work_flow_data","fields":[{"name":"id","type":"bigint","length":20},{"name":"from_id","type":"int","length":10},{"name":"from_module_id","type":"int","length":10},{"name":"to_id","type":"int","length":10},{"name":"to_module_id","type":"int","length":10},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]},"workflow_actions":{"name":"workflow_actions","fields":[{"name":"id","type":"bigint","length":20},{"name":"name","type":"varchar","length":255},{"name":"created_at","type":"timestamp","length":null},{"name":"updated_at","type":"timestamp","length":null}]}}]';
     }
+
     public static function insertImport($module, $data)
     {
         $faker = Factory::create();
-        $arr=[];
-        $ids=[];
-        foreach($data as $row)
-        {
+        $arr = [];
+        $ids = [];
+        foreach ($data as $row) {
             Field::where('module_id', $module->id)->get()->each(function ($item) use (&$arr, &$row) {
-                $singleItem=array_shift($row);
-                if($item->input_type == 'checkbox' && intval($singleItem) < 1) $singleItem=0;
-                $arr[$item->name]=$singleItem;
+                $singleItem = array_shift($row);
+                if ($item->input_type == 'checkbox' && intval($singleItem) < 1) {
+                $singleItem = 0;
+                }
+                $arr[$item->name] = $singleItem;
             });
-            $arr['slug']=$faker->regexify('[A-Za-z0-9]{20}');
+            $arr['slug'] = $faker->regexify('[A-Za-z0-9]{20}');
             $ids[] = DB::table($module->name)->insertGetId($arr);
         }
+
         return $ids;
     }
-
-
 }
-
-

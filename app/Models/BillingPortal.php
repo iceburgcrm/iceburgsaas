@@ -6,7 +6,6 @@ use app\Concerns\ResolvesActions;
 use app\Concerns\ResolvesAuthorization;
 use app\Concerns\ResolvesBillable;
 
-
 class BillingPortal
 {
     use ResolvesActions;
@@ -32,8 +31,6 @@ class BillingPortal
 
     /**
      * Wether the proration should occur when swapping.
-     *
-     * @return bool
      */
     public static function proratesOnSwap(): bool
     {

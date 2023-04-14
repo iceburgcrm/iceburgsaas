@@ -19,13 +19,12 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
         UserCreated::class => [
-            SendRegisterationEmail::class
+            SendRegisterationEmail::class,
         ],
         WebhookReceived::class => [
             StripeEventListener::class,
         ],
     ];
-
 
     /**
      * Register any events for your application.

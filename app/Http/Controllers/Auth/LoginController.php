@@ -1,11 +1,13 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
+
 use App\Http\Controllers\Controller;
-use Laravel\Socialite\Facades\Socialite;
-use Illuminate\Support\Facades\Auth;
-use Exception;
-use App\Models\User;
 use App\Models\Team;
+use App\Models\User;
+use Exception;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends Controller
 {
@@ -41,17 +43,18 @@ class LoginController extends Controller
             $user = Socialite::driver('google')->user();
             // if the user exits, use that user and login
             $finduser = User::where('google_id', $user->id)->first();
-            if($finduser){
+            if ($finduser) {
                 //if the user exists, login and show dashboard
                 Auth::login($finduser);
+
                 return redirect('/dashboard');
-            }else{
+            } else {
                 //user is not yet created, so create first
                 $newUser = User::create([
                     'name' => $user->name,
                     'email' => $user->email,
-                    'google_id'=> $user->id,
-                    'password' => encrypt('')
+                    'google_id' => $user->id,
+                    'password' => encrypt(''),
                 ]);
                 //every user needs a team for dashboard/jetstream to work.
                 //create a personal team for the user
@@ -83,17 +86,18 @@ class LoginController extends Controller
 
             // if the user exits, use that user and login
             $finduser = User::where('github_id', $user->id)->first();
-            if($finduser){
+            if ($finduser) {
                 //if the user exists, login and show dashboard
                 Auth::login($finduser);
+
                 return redirect('/dashboard');
-            }else{
+            } else {
                 //user is not yet created, so create first
                 $newUser = User::create([
                     'name' => $user->name,
                     'email' => $user->email,
-                    'github_id'=> $user->id,
-                    'password' => encrypt('')
+                    'github_id' => $user->id,
+                    'password' => encrypt(''),
                 ]);
                 //every user needs a team for dashboard/jetstream to work.
                 //create a personal team for the user
@@ -124,17 +128,18 @@ class LoginController extends Controller
             $user = Socialite::driver('twitter')->user();
             // if the user exits, use that user and login
             $finduser = User::where('twitter_id', $user->id)->first();
-            if($finduser){
+            if ($finduser) {
                 //if the user exists, login and show dashboard
                 Auth::login($finduser);
+
                 return redirect('/dashboard');
-            }else{
+            } else {
                 //user is not yet created, so create first
                 $newUser = User::create([
                     'name' => $user->name,
                     'email' => $user->email,
-                    'twitter_id'=> $user->id,
-                    'password' => encrypt('')
+                    'twitter_id' => $user->id,
+                    'password' => encrypt(''),
                 ]);
                 //every user needs a team for dashboard/jetstream to work.
                 //create a personal team for the user

@@ -1,4 +1,5 @@
 <?php
-class Seed {
 
+class Seed
+{
 }
