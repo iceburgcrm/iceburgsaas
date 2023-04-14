@@ -1,9 +1,20 @@
 {
-    "name": "laravel/laravel",
+    "name": "iceburgcrm/iceburgsaas",
     "type": "project",
-    "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "description": "IceburgCRM SASS. Code behind IceburgCRM.com Host customer IceburgCRMs. Made with Laravel JetStream, Socialite, Tailwinds and DaisyUI.",
+    "keywords": ["framework", "crm", "vue3", "inertia", "iceburg", "iceburg crm", "cms", "composition api", "iceburg", "saas", "laravel saas", "laravel crm" ],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Robert Devenyi",
+            "email": "rob@phpdeveloper.ca",
+            "homepage": "https://www.software-developer.ca",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "docs": "http://docs.iceburg.ca"
+    },
     "require": {
         "php": "^8.0.2",
         "guzzlehttp/guzzle": "^7.2",
